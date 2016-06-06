@@ -81,12 +81,11 @@ function publishToBroker() {
 		"GPGGA": GPGGAValue,
 		"GPRMC": GPRMCValue,
 	}
-	// client.publish('GPSData', JSON.stringify(GPGGAValue+GPRMCValue))
 	client.publish('GPSData', JSON.stringify(combineTwo))
 }
 
 setInterval(publishToBroker, 2000);
-//setInterval(printFinalGPSData, 5000);
+setInterval(printFinalGPSData, 5000);
 //setInterval(getGPSInfo, 2);
 
 // Print message when exiting
