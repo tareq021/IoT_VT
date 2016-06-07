@@ -1,10 +1,11 @@
 // Required Modules
 // require('events').EventEmitter.defaultMaxListeners = Infinity;
-require('events').EventEmitter.prototype._maxListeners = Infinity;
+// require('events').EventEmitter.prototype._maxListeners = Infinity;
 var GPSSensor = require('jsupm_ublox6');
 var nmea = require('nmea-0183');
 var stringSearcher = require('string-search');
 const mqtt = require('mqtt');
+// var events = require('events');
 var broker='mqtt://test.mosquitto.org';
 //var broker='mqtt://broker.hivemq.com';
 const client = mqtt.connect(broker);
@@ -56,17 +57,18 @@ function getFinalGPSData() {
 }
 
 // MQTT Publish
-function publishToServer() {
-	client.on('connect', function () {
+function publishToBroker() {
+	// client.on('connect', function () {
 		// client.publish('GPSData', "FROM SENSOR")
+		getGPSInfo();
 		client.publish('GPSData', JSON.stringify(GPSExpectedValue))
 		// client.publish('GPSData', GPSExpectedValue.id)
-	});
+	// });
 }
 
-setInterval(getGPSInfo, 1);
+setInterval(publishToBroker, 5000);
 // setInterval(getFinalGPSData, 500);
-setInterval(publishToServer, 2);
+//setInterval(publishToBroker, 2);
 
 // Print message when exiting
 process.on('SIGINT', function () {
