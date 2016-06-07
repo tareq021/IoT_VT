@@ -1,9 +1,13 @@
 // Required Modules
+// require('events').EventEmitter.defaultMaxListeners = Infinity;
+require('events').EventEmitter.prototype._maxListeners = Infinity;
 var GPSSensor = require('jsupm_ublox6');
 var nmea = require('nmea-0183');
 var stringSearcher = require('string-search');
 const mqtt = require('mqtt');
-const client = mqtt.connect('mqtt://broker.hivemq.com')
+var broker='mqtt://test.mosquitto.org';
+//var broker='mqtt://broker.hivemq.com';
+const client = mqtt.connect(broker);
 
 var GPSSensorType = new GPSSensor.Ublox6(0);
 var variable_name = 'GPGGA'; // GPGGA, GPRMC, GPGSA, GPGSV, GPVTG
@@ -45,13 +49,24 @@ function getGPSInfo() {
 	}
 }
 
-// Gets the final data
+// For Example only
+// Prints the final GPS data
 function getFinalGPSData() {
 	console.log(GPSExpectedValue); // returns JSON format data
 }
 
-setInterval(getGPSInfo, 10);
-setInterval(getFinalGPSData, 1000);
+// MQTT Publish
+function publishToServer() {
+	client.on('connect', function () {
+		// client.publish('GPSData', "FROM SENSOR")
+		client.publish('GPSData', JSON.stringify(GPSExpectedValue))
+		// client.publish('GPSData', GPSExpectedValue.id)
+	});
+}
+
+setInterval(getGPSInfo, 1);
+// setInterval(getFinalGPSData, 500);
+setInterval(publishToServer, 2);
 
 // Print message when exiting
 process.on('SIGINT', function () {
