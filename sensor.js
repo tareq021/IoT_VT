@@ -1,19 +1,21 @@
 // Required Modules
 var GPSSensor = require('jsupm_ublox6');
-var nmea = require('nmea-0183')
+var nmea = require('nmea-0183');
 var stringSearcher = require('string-search');
+const mqtt = require('mqtt');
+const client = mqtt.connect('mqtt://broker.hivemq.com')
 
 var GPSSensorType = new GPSSensor.Ublox6(0);
 var variable_name = 'GPGGA'; // GPGGA, GPRMC, GPGSA, GPGSV, GPVTG
 var GPSExpectedValue = "";
 
+var bufferLength = 256;
+var nmeaBuffer = new GPSSensor.charArray(bufferLength);
+
 if (!GPSSensorType.setupTty(GPSSensor.int_B9600)) {
 	console.log("Failed to setup tty port parameters");
 	process.exit(0);
 }
-
-var bufferLength = 256;
-var nmeaBuffer = new GPSSensor.charArray(bufferLength);
 
 // Reads data from GPS
 function getGPSInfo() {
