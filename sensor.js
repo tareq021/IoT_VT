@@ -3,11 +3,11 @@ var GPSSensor = require('jsupm_ublox6');
 var nmea = require('nmea-0183')
 var stringSearcher = require('string-search');
 
-var GPSSensor = new GPSSensor.Ublox6(0);
-var variable_value = "";
+var GPSSensorType = new GPSSensor.Ublox6(0);
 var variable_name = 'GPGGA'; // GPGGA, GPRMC, GPGSA, GPGSV, GPVTG
+var GPSExpectedValue = "";
 
-if (!GPSSensor.setupTty(GPSSensor.int_B9600)) {
+if (!GPSSensorType.setupTty(GPSSensor.int_B9600)) {
 	console.log("Failed to setup tty port parameters");
 	process.exit(0);
 }
@@ -15,23 +15,22 @@ if (!GPSSensor.setupTty(GPSSensor.int_B9600)) {
 var bufferLength = 256;
 var nmeaBuffer = new GPSSensor.charArray(bufferLength);
 
+// Reads data from GPS
 function getGPSInfo() {
-	if (GPSSensor.dataAvailable()) {
-		var read_value = GPSSensor.readData(nmeaBuffer, bufferLength);
+	if (GPSSensorType.dataAvailable()) {
+		var read_value = GPSSensorType.readData(nmeaBuffer, bufferLength);
 
-		var GPSData;
+		var GPSRawData;
 
-		var numlines = 0;
 		if (read_value > 0) {
-			GPSData = "";
+			GPSRawData = "";
 			for (var x = 0; x < read_value; x++) {
-				GPSData += nmeaBuffer.getitem(x);
+				GPSRawData += nmeaBuffer.getitem(x);
 			}
-			stringSearcher.find(GPSData, variable_name).then(function (resultArr) {
-				if (GPSData.indexOf('$' + variable_name) > -1) {
-					variable_value = nmea.parse(resultArr[0].text);
-					console.log(JSON.stringify(variable_value, null, 2));
-					// console.log(variable_value.id);
+			stringSearcher.find(GPSRawData, variable_name).then(function (resultArr) {
+				if (GPSRawData.indexOf('$' + variable_name) > -1) {
+
+					GPSExpectedValue = nmea.parse(resultArr[0].text);
 				}
 			});
 		}
@@ -44,7 +43,13 @@ function getGPSInfo() {
 	}
 }
 
+// Gets the final data
+function getFinalGPSData() {
+	console.log(GPSExpectedValue); // returns JSON format data
+}
+
 setInterval(getGPSInfo, 10);
+setInterval(getFinalGPSData, 1000);
 
 // Print message when exiting
 process.on('SIGINT', function () {
