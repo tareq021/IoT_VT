@@ -3,11 +3,11 @@ var GPSSensor = require('jsupm_ublox6');
 var nmea = require('nmea-0183')
 var stringSearcher = require('string-search');
 
-var myGPSSensor = new GPSSensor.Ublox6(0);
+var GPSSensor = new GPSSensor.Ublox6(0);
 var variable_value = "";
 var variable_name = 'GPGGA'; // GPGGA, GPRMC, GPGSA, GPGSV, GPVTG
 
-if (!myGPSSensor.setupTty(GPSSensor.int_B9600)) {
+if (!GPSSensor.setupTty(GPSSensor.int_B9600)) {
 	console.log("Failed to setup tty port parameters");
 	process.exit(0);
 }
@@ -16,15 +16,15 @@ var bufferLength = 256;
 var nmeaBuffer = new GPSSensor.charArray(bufferLength);
 
 function getGPSInfo() {
-	if (myGPSSensor.dataAvailable()) {
-		var rv = myGPSSensor.readData(nmeaBuffer, bufferLength);
+	if (GPSSensor.dataAvailable()) {
+		var read_value = GPSSensor.readData(nmeaBuffer, bufferLength);
 
 		var GPSData;
 
 		var numlines = 0;
-		if (rv > 0) {
+		if (read_value > 0) {
 			GPSData = "";
-			for (var x = 0; x < rv; x++) {
+			for (var x = 0; x < read_value; x++) {
 				GPSData += nmeaBuffer.getitem(x);
 			}
 			stringSearcher.find(GPSData, variable_name).then(function (resultArr) {
@@ -36,7 +36,7 @@ function getGPSInfo() {
 			});
 		}
 
-		if (rv < 0) // some sort of read error occured
+		if (read_value < 0) // some sort of read error occured
 		{
 			console.log("Port read error.");
 			process.exit(0);
