@@ -11,8 +11,10 @@ var broker = 'mqtt://test.mosquitto.org';
 const client = mqtt.connect(broker);
 
 var GPSSensorType = new GPSSensor.Ublox6(0);
-var variable_name = 'GPGGA'; // GPGGA, GPRMC, GPGSA, GPGSV, GPVTG
-var GPSExpectedValue = "";
+var variable_GPGGA = 'GPGGA'; // GPGGA, GPRMC, GPGSA, GPGSV, GPVTG
+var variable_GPRMC = 'GPRMC'; // GPGGA, GPRMC, GPGSA, GPGSV, GPVTG
+var GPGGAValue = "";
+var GPRMCValue = "";
 
 var bufferLength = 256;
 var nmeaBuffer = new GPSSensor.charArray(bufferLength);
@@ -36,10 +38,18 @@ function getGPSInfo() {
 			for (var x = 0; x < read_value; x++) {
 				GPSRawData += nmeaBuffer.getitem(x);
 			}
-			stringSearcher.find(GPSRawData, variable_name).then(function (resultArr) {
-				if (GPSRawData.indexOf('$' + variable_name) > -1) {
 
-					GPSExpectedValue = nmea.parse(resultArr[0].text);
+			stringSearcher.find(GPSRawData, variable_GPGGA).then(function (resultArr) {
+				if (GPSRawData.indexOf('$' + variable_GPGGA) > -1) {
+
+					GPGGAValue = nmea.parse(resultArr[0].text);
+				}
+			});
+
+			stringSearcher.find(GPSRawData, variable_GPRMC).then(function (resultArr) {
+				if (GPSRawData.indexOf('$' + variable_GPRMC) > -1) {
+
+					GPRMCValue = nmea.parse(resultArr[0].text);
 				}
 			});
 		}
@@ -55,7 +65,7 @@ function getGPSInfo() {
 // For Example only
 // Prints the final GPS data
 function printFinalGPSData() {
-	console.log(GPSExpectedValue); // returns JSON format data
+	console.log(GPGGAValue); // returns JSON format data
 	console.log(currentTime)
 }
 
@@ -64,14 +74,19 @@ function publishToBroker() {
 	getGPSInfo();
 	var currentDate = moment().tz("Asia/Dhaka").format('YYYY/MM/DD');
 	var currentTime = moment().tz("Asia/Dhaka").format('HH:mm:ss');
-	GPSExpectedValue.date = currentDate;
-	GPSExpectedValue.time = currentTime;
-	GPSExpectedValue.sensorId = GPSSensorId;
-	client.publish('GPSData', JSON.stringify(GPSExpectedValue))
+	GPGGAValue.date = currentDate;
+	GPGGAValue.time = currentTime;
+	GPGGAValue.sensorId = GPSSensorId;
+	var combineTwo = {
+		"GPGGA": GPGGAValue,
+		"GPRMC": GPRMCValue,
+	}
+	// client.publish('GPSData', JSON.stringify(GPGGAValue+GPRMCValue))
+	client.publish('GPSData', JSON.stringify(combineTwo))
 }
 
 setInterval(publishToBroker, 2000);
-setInterval(printFinalGPSData, 5000);
+//setInterval(printFinalGPSData, 5000);
 //setInterval(getGPSInfo, 2);
 
 // Print message when exiting
