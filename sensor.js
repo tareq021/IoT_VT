@@ -1,12 +1,12 @@
 // Required Modules
-// require('events').EventEmitter.defaultMaxListeners = Infinity;
-// require('events').EventEmitter.prototype._maxListeners = Infinity;
 var GPSSensor = require('jsupm_ublox6');
+var GPSSensorId = "group-6-GPS";
 var nmea = require('nmea-0183');
 var stringSearcher = require('string-search');
 const mqtt = require('mqtt');
-// var events = require('events');
-var broker='mqtt://test.mosquitto.org';
+var moment = require('moment');
+var momentTimezone = require('moment-timezone');
+var broker = 'mqtt://test.mosquitto.org';
 //var broker='mqtt://broker.hivemq.com';
 const client = mqtt.connect(broker);
 
@@ -16,6 +16,8 @@ var GPSExpectedValue = "";
 
 var bufferLength = 256;
 var nmeaBuffer = new GPSSensor.charArray(bufferLength);
+
+var currentTime = moment().tz("Asia/Dhaka").format('YYYY/MM/DD HH:mm:ss');
 
 if (!GPSSensorType.setupTty(GPSSensor.int_B9600)) {
 	console.log("Failed to setup tty port parameters");
@@ -52,23 +54,25 @@ function getGPSInfo() {
 
 // For Example only
 // Prints the final GPS data
-function getFinalGPSData() {
+function printFinalGPSData() {
 	console.log(GPSExpectedValue); // returns JSON format data
+	console.log(currentTime)
 }
 
 // MQTT Publish
 function publishToBroker() {
-	// client.on('connect', function () {
-		// client.publish('GPSData', "FROM SENSOR")
-		getGPSInfo();
-		client.publish('GPSData', JSON.stringify(GPSExpectedValue))
-		// client.publish('GPSData', GPSExpectedValue.id)
-	// });
+	getGPSInfo();
+	var currentDate = moment().tz("Asia/Dhaka").format('YYYY/MM/DD');
+	var currentTime = moment().tz("Asia/Dhaka").format('HH:mm:ss');
+	GPSExpectedValue.date = currentDate;
+	GPSExpectedValue.time = currentTime;
+	GPSExpectedValue.sensorId = GPSSensorId;
+	client.publish('GPSData', JSON.stringify(GPSExpectedValue))
 }
 
-setInterval(publishToBroker, 5000);
-// setInterval(getFinalGPSData, 500);
-//setInterval(publishToBroker, 2);
+setInterval(publishToBroker, 2000);
+setInterval(printFinalGPSData, 5000);
+//setInterval(getGPSInfo, 2);
 
 // Print message when exiting
 process.on('SIGINT', function () {
