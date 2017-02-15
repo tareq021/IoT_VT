@@ -5,6 +5,8 @@ const bodyParser = require('body-parser');
 const mongodb = require("mongodb");
 const path = require("path");
 const mongoose = require('mongoose');
+var moment = require('moment');
+var momentTimezone = require('moment-timezone');
 // var ObjectID = mongodb.ObjectID;
 var broker = 'mqtt://test.mosquitto.org';
 //var broker='mqtt://broker.hivemq.com';
@@ -26,6 +28,8 @@ var dataBaseSchema = new mongoose.Schema({
     deviceID: String,
     deviceTime: String,
     deviceDate: String,
+    receiveTime: String,
+    receiveDate: String,
     latitude: String,
     longitude: String,
     fix: Number,
@@ -42,10 +46,12 @@ var gpsData = mongoose.model('gpsData', dataBaseSchema);
 function saveToDb(sensorData) {
 
     var saveToDb = new gpsData({
-        
+
         deviceID: sensorData.GPGGA.sensorId,
         deviceTime: sensorData.GPGGA.time,
         deviceDate: sensorData.GPGGA.date,
+        receiveTime: moment().tz("Asia/Dhaka").format('HH:mm:ss'),
+        receiveDate: moment().tz("Asia/Dhaka").format('YYYY/MM/DD'),
         latitude: sensorData.GPGGA.latitude,
         longitude: sensorData.GPGGA.longitude,
         fix: sensorData.GPGGA.fix,
