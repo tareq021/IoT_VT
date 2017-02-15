@@ -72,10 +72,8 @@ function printFinalGPSData() {
 // MQTT Publish
 function publishToBroker() {
 	getGPSInfo();
-	var currentDate = moment().tz("Asia/Dhaka").format('YYYY/MM/DD');
-	var currentTime = moment().tz("Asia/Dhaka").format('HH:mm:ss');
-	GPGGAValue.date = currentDate;
-	GPGGAValue.time = currentTime;
+	GPGGAValue.date = moment().tz("Asia/Dhaka").format('YYYY/MM/DD');
+	GPGGAValue.time = moment().tz("Asia/Dhaka").format('HH:mm:ss');
 	GPGGAValue.sensorId = GPSSensorId;
 	var combineTwo = {
 		"GPGGA": GPGGAValue,
