@@ -2,7 +2,7 @@
   "name": "final_project",
   "version": "1.0.0",
   "description": "Datasoft Final Project",
-  "main": "sensor.js",
+  "main": "server.js",
   "dependencies": {
     "request": "^2.79.0",
     "body-parser": "^1.13.3",
