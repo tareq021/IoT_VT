@@ -3,6 +3,12 @@
   "version": "1.0.0",
   "description": "Datasoft Final Project",
   "main": "sensor.js",
+  "dependencies": {
+    "request": "^2.79.0",
+    "body-parser": "^1.13.3",
+    "express": "^4.13.3",
+    "mongodb": "^2.1.6"
+  },
   "scripts": {
     "test": "none",
     "start": "node server.js"
