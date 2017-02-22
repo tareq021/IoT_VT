@@ -21,7 +21,10 @@ client.on('message', function (topic, dataFromSensor) {
 });
 
 //Database operation starts here
-mongoose.connect('mongodb://vtdata:vtdata@ds147069.mlab.com:47069/vt');
+mongoose.connect('mongodb://vtdata:vtdata@ds147069.mlab.com:47069/vt',function(err, dataBase){
+
+    console.log("Database Connected")
+});
 
 var dataBaseSchema = new mongoose.Schema({
 
