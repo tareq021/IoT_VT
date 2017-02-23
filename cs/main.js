@@ -1,8 +1,8 @@
 $(document).ready(function() {
-    getSensorData();
+    getGpsData();
 });
 
-function getSensorData() {
+function getGpsData() {
 
     $.ajax({
         url: 'https://api.mlab.com/api/1/databases/vt/collections/gpsdatas?apiKey=JmS3cz8gYVCSSQvWP2_nvof67mndnJov'
@@ -25,6 +25,7 @@ function getSensorData() {
             output += '<td>' + data.deviceVariation + '</td>';
             output += '</tr>';
         });
-        $('#sensordata').html(output);
+        $('#gpsData').html(output);
     });
 }
+setInterval(getGpsData, 3000);
