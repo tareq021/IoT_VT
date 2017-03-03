@@ -1,0 +1,21 @@
+{
+  "name": "finalprojectver_2",
+  "version": "1.0.2",
+  "description": "Tracking vehicle in an enclosed area.",
+  "main": "server.js",
+  "scripts": {
+    "test": "none",
+    "start": "node server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "none"
+  },
+  "keywords": [
+    "expressjs",
+    "mlab",
+    "mongodb"
+  ],
+  "author": "Tareq",
+  "license": "ISC"
+}
