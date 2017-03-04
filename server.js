@@ -1,4 +1,3 @@
-// var http = require("http");
 const mqtt = require('mqtt');
 const express = require("express");
 var app = express();
@@ -81,6 +80,7 @@ function saveSensorDataToDb(sensorData) {
 // User operation
 
 app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.json());
 app.engine('html', cons.ejs);
 app.set('view engine', 'html');
 
@@ -108,19 +108,22 @@ app.get("/getDataByDeviceId/:query", function(req, res) {
 app.get("/getAllData", function(req, res) {
 
     GPSDataSchemaModel.find({}, function(err, result) {
-            if (err) throw err;
-            if (result) {
-                // res.json(result)
-                res.render("index.ejs", {
-                    dbData: result
-                });
-            } else {
-                res.send(JSON.stringify({
-                    error: 'Error'
-                }))
-            }
-        })
-        // res.render("index.html", {});
+        if (err) throw err;
+        if (result) {
+            res.render("index.ejs", {
+                dbData: result
+            });
+        } else {
+            res.send(JSON.stringify({
+                error: 'Error'
+            }))
+        }
+    })
+})
+
+app.get("/onmap", function(req, res) {
+
+    res.send(req.query)
 })
 
 var server = app.listen(3000, function() {});
