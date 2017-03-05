@@ -1,51 +1,36 @@
+<!DOCTYPE html>
 <html>
-
-<head>
-    <title>Simple Map</title>
-    <meta name="viewport" content="initial-scale=1.0">
-    <meta charset="utf-8">
+  <head>
     <style>
-        /* Always set the map height explicitly to define the size of the div
-       * element that contains the map. */
-        
-        #map {
-            height: 100%;
-        }
-        /* Optional: Makes the sample page fill the window. */
-        
-        html,
-        body {
-            height: 100%;
-            margin: 0;
-            padding: 0;
-        }
+       #map {
+        height: 800px;
+        width: 100%;
+       }
     </style>
-</head>
-
-<body>
+  </head>
+  <body>
+    <h3>Vehicle position</h3>
     <div id="map"></div>
-
-
     <script>
-        var map;
-
-        var lat = <%= lat %>
-        var lng = <%= lng %>
-
-        console.log(lat);
-        console.log(lng);
-
-        function initMap() {
-            map = new google.maps.Map(document.getElementById('map'), {
-                center: {
-                    lat: lat,
-                    lng: lng
-                },
-                zoom: 8
-            });
-        }
+      function initMap() {          
+        var latlong = {lat: <%=lat%>, lng: <%=lng%>};
+        var map = new google.maps.Map(document.getElementById('map'), {
+          zoom: 6,
+          center: latlong
+        });
+        var marker = new google.maps.Marker({
+          position: latlong,
+          map: map
+        });
+      }
     </script>
+    <script async defer
     <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBU3HlkBZ1d5c1t1KZOf5YyEmxH5oKCsHo&callback=initMap" async defer></script>
-</body>
-
+    </script>
+  </body>
 </html>
+
+
+
+
+    

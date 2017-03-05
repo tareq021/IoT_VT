@@ -122,10 +122,11 @@ app.get("/getAllData", function(req, res) {
 });
 
 app.get("/onmap", function(req, res) {
-
     res.render("singleplot.ejs", {
         lat: req.query.latitude,
-        lng: req.query.longitude
+        lng: req.query.longitude,
+        // lat: 23.7739,
+        // lng: 90.3663,
     });
 });
 
