@@ -2,11 +2,13 @@ const mqtt = require('mqtt');
 const express = require("express");
 var app = express();
 var cons = require('consolidate');
-var url = 'mongodb://vtdata:vtdata@ds147069.mlab.com:47069/vt';
+var urlGps = 'mongodb://vtdata:vtdata@ds147069.mlab.com:47069/vt';
+// var urlDevice = 'mongodb://vtdata:vtdata@ds147069.mlab.com:47069/device';
 const bodyParser = require('body-parser');
 const mongodb = require("mongodb");
-const mongoose = require('mongoose');
-var DATA_COLLECTION = 'gpsData';
+var mongoose = require('mongoose');
+var GPS_DATA = 'gpsData';
+var VEHICLE_DATA = 'vehicleData';
 var moment = require('moment');
 var momentTimezone = require('moment-timezone');
 var broker = 'mqtt://test.mosquitto.org';
@@ -23,9 +25,9 @@ mqttClient.on('message', function(topic, dataFromSensor) {
 });
 
 //Database operation starts here
-mongoose.connect(url, function(err, dataBase) {
+mongoose.connect(urlGps, function(err, dataBase) {
 
-    console.log("Database Connected");
+    console.log("GPS Database Connected");
 });
 
 var dataBaseSchema = new mongoose.Schema({
@@ -46,7 +48,18 @@ var dataBaseSchema = new mongoose.Schema({
 
 });
 
-var GPSDataSchemaModel = mongoose.model(DATA_COLLECTION, dataBaseSchema);
+var deviceSchema = new mongoose.Schema({
+
+    deviceID: String,
+    vehicleType: String,
+    vehicleModel: String,
+    vehicleRegNo: String,
+    vehicleChesisNo: String,
+    vehiclePermission: String,
+});
+
+var GPSDataSchemaModel = mongoose.model(GPS_DATA, dataBaseSchema);
+var vehicleSchemaModel = mongoose.model(VEHICLE_DATA, deviceSchema);
 
 function saveSensorDataToDb(sensorData) {
 
@@ -76,13 +89,50 @@ function saveSensorDataToDb(sensorData) {
     })
 }
 
+function saveVehicleDataToDb(deviceData) {
+
+    var saveToDb = new vehicleSchemaModel({
+
+        deviceID: String,
+        vehicleType: String,
+        vehicleModel: String,
+        vehicleRegNo: String,
+        vehicleChesisNo: String,
+        vehiclePermission: String,
+    });
+
+    saveToDb.save(function(err) {
+        if (err) {
+            console.log("Error in saving : " + err);
+        } else {
+            console.log("Saved Data :" + saveToDb)
+        }
+    })
+}
+
 
 // User operation
 
-app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 app.engine('html', cons.ejs);
 app.set('view engine', 'html');
+
+
+app.get("/addDevice", function(req, res) {
+
+    res.render("addvehicle.ejs", {
+        // devices: ids,
+        // title: "Device List"
+    });
+});
+
+app.post("/addDevice", function(req, res) {
+    saveVehicleDataToDb(req.body);
+    var deviceData = JSON.stringify(req.body);
+    console.log(deviceData);
+    saveVehicleDataToDb(JSON.parse(deviceData));
+});
 
 app.get("/devices", function(req, res) {
 
@@ -105,8 +155,9 @@ app.get("/getDataByDeviceId/:query", function(req, res) {
         if (err) throw err;
         if (result) {
 
-            res.render("index.ejs", {
-                dbData: result
+            res.render("gpsdata.ejs", {
+                dbData: result,
+                title: "GPS Data : " + query
             });
         } else {
             res.send(JSON.stringify({
