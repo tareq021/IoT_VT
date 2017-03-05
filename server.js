@@ -116,14 +116,17 @@ app.get("/getAllData", function(req, res) {
         } else {
             res.send(JSON.stringify({
                 error: 'Error'
-            }))
-        }
-    })
-})
+            }));
+        };
+    });
+});
 
 app.get("/onmap", function(req, res) {
 
-    res.send(req.query)
-})
+    res.render("singleplot.ejs", {
+        lat: req.query.latitude,
+        lng: req.query.longitude
+    });
+});
 
 var server = app.listen(3000, function() {});
