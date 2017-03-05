@@ -2,8 +2,7 @@ const mqtt = require('mqtt');
 const express = require("express");
 var app = express();
 var cons = require('consolidate');
-var urlGps = 'mongodb://vtdata:vtdata@ds147069.mlab.com:47069/vt';
-// var urlDevice = 'mongodb://vtdata:vtdata@ds147069.mlab.com:47069/device';
+var dbUrl = 'mongodb://vtdata:vtdata@ds147069.mlab.com:47069/vt';
 const bodyParser = require('body-parser');
 const mongodb = require("mongodb");
 var mongoose = require('mongoose');
@@ -25,7 +24,7 @@ mqttClient.on('message', function(topic, dataFromSensor) {
 });
 
 //Database operation starts here
-mongoose.connect(urlGps, function(err, dataBase) {
+mongoose.connect(dbUrl, function(err, dataBase) {
 
     console.log("GPS Database Connected");
 });
@@ -93,12 +92,12 @@ function saveVehicleDataToDb(deviceData) {
 
     var saveToDb = new vehicleSchemaModel({
 
-        deviceID: String,
-        vehicleType: String,
-        vehicleModel: String,
-        vehicleRegNo: String,
-        vehicleChesisNo: String,
-        vehiclePermission: String,
+        deviceID: deviceData.deviceID,
+        vehicleType: deviceData.vehicleType,
+        vehicleModel: deviceData.vehicleModel,
+        vehicleRegNo: deviceData.vehicleRegNo,
+        vehicleChesisNo: deviceData.vehicleChesisNo,
+        vehiclePermission: deviceData.vehiclePermission,
     });
 
     saveToDb.save(function(err) {
@@ -118,25 +117,20 @@ app.use(bodyParser.json());
 app.engine('html', cons.ejs);
 app.set('view engine', 'html');
 
-
 app.get("/addDevice", function(req, res) {
 
-    res.render("addvehicle.ejs", {
-        // devices: ids,
-        // title: "Device List"
-    });
+    res.render("addvehicle.ejs", {});
 });
 
 app.post("/addDevice", function(req, res) {
+
     saveVehicleDataToDb(req.body);
-    var deviceData = JSON.stringify(req.body);
-    console.log(deviceData);
-    saveVehicleDataToDb(JSON.parse(deviceData));
+    res.redirect("/devices");
 });
 
 app.get("/devices", function(req, res) {
 
-    GPSDataSchemaModel.find().distinct('deviceID', function(error, ids) {
+    vehicleSchemaModel.find().distinct('deviceID', function(error, ids) {
         console.log(ids)
         res.render("devices.ejs", {
             devices: ids,
@@ -172,8 +166,9 @@ app.get("/getAllData", function(req, res) {
     GPSDataSchemaModel.find({}, function(err, result) {
         if (err) throw err;
         if (result) {
-            res.render("index.ejs", {
-                dbData: result
+            res.render("gpsdata.ejs", {
+                dbData: result,
+                title: "GPS Data of All Device"
             });
         } else {
             res.send(JSON.stringify({
@@ -187,8 +182,6 @@ app.get("/onmap", function(req, res) {
     res.render("singleplot.ejs", {
         lat: req.query.latitude,
         lng: req.query.longitude,
-        // lat: 23.7739,
-        // lng: 90.3663,
     });
 });
 
