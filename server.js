@@ -119,7 +119,9 @@ app.set('view engine', 'html');
 
 app.get("/addDevice", function(req, res) {
 
-    res.render("addvehicle.ejs", {});
+    res.render("addvehicle.ejs", {
+        title: "Add Device"
+    });
 });
 
 app.post("/addDevice", function(req, res) {
@@ -128,10 +130,19 @@ app.post("/addDevice", function(req, res) {
     res.redirect("/devices");
 });
 
+app.get("/deleteDevice/:query", function(req, res) {
+
+    var query = req.params.query;
+    query = JSON.stringify(query);
+    console.log(query)
+        // vehicleSchemaModel.remove({ deviceID: query }, res.redirect("/devices"));
+        // vehicleSchemaModel.findOneAndRemove({ deviceID: query }, res.redirect("/devices"));
+    vehicleSchemaModel.find({ deviceID: query }).remove(res.redirect("/devices"));
+});
+
 app.get("/devices", function(req, res) {
 
     vehicleSchemaModel.find().distinct('deviceID', function(error, ids) {
-        console.log(ids)
         res.render("devices.ejs", {
             devices: ids,
             title: "Device List"

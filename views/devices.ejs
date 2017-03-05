@@ -22,6 +22,7 @@
                             <td>SL</td>
                             <td>Device ID</td>                            
                             <td>Location Details</td>
+                            <td>Remove Device</td>
                         </tr>
                     </thead>
                     <tbody>
@@ -30,6 +31,7 @@
                     <td><%= i+1 %></td>
                     <td><%= devices[i] %></td>                     
                     <td><a href="/getDataByDeviceId/<%= devices[i]%>" class="btn btn-info" role="button">Locations</a></td>  
+                    <td><a href="/deleteDevice/<%= devices[i]%>" class="btn btn-danger" role="button">Remove</a></td>  
                     </tr>
                     <% } %>
 
