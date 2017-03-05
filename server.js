@@ -84,6 +84,17 @@ app.use(bodyParser.json());
 app.engine('html', cons.ejs);
 app.set('view engine', 'html');
 
+app.get("/devices", function(req, res) {
+
+    GPSDataSchemaModel.find().distinct('deviceID', function(error, ids) {
+        console.log(ids)
+        res.render("devices.ejs", {
+            devices: ids,
+            title: "Device List"
+        });
+    });
+});
+
 app.get("/getDataByDeviceId/:query", function(req, res) {
 
     var query = req.params.query;
@@ -100,10 +111,10 @@ app.get("/getDataByDeviceId/:query", function(req, res) {
         } else {
             res.send(JSON.stringify({
                 error: 'Error'
-            }))
+            }));
         }
-    })
-})
+    });
+});
 
 app.get("/getAllData", function(req, res) {
 
