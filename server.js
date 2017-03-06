@@ -133,11 +133,16 @@ app.post("/addDevice", function(req, res) {
 app.get("/deleteDevice/:query", function(req, res) {
 
     var query = req.params.query;
-    query = JSON.stringify(query);
-    console.log(query)
-        // vehicleSchemaModel.remove({ deviceID: query }, res.redirect("/devices"));
-        // vehicleSchemaModel.findOneAndRemove({ deviceID: query }, res.redirect("/devices"));
-    vehicleSchemaModel.find({ deviceID: query }).remove(res.redirect("/devices"));
+
+    // This also works
+    // vehicleSchemaModel.remove({ deviceID: query })
+    //     .then(returned => res.redirect("/devices"))
+    //     .catch(err => { console.log(err) })
+
+    vehicleSchemaModel.remove({ deviceID: query }, function(err, doc) {
+        if (err) console.log(err);
+        res.redirect("/devices")
+    })
 });
 
 app.get("/devices", function(req, res) {
