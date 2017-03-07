@@ -8,6 +8,7 @@ const mongodb = require("mongodb");
 var mongoose = require('mongoose');
 var GPS_DATA = 'gpsData';
 var VEHICLE_DATA = 'vehicleData';
+var RFID_DATA = 'rfidData';
 var moment = require('moment');
 var momentTimezone = require('moment-timezone');
 var broker = 'mqtt://test.mosquitto.org';
@@ -15,21 +16,30 @@ var broker = 'mqtt://test.mosquitto.org';
 
 // MQTT Subscribe
 // Data updates autometically
-const mqttClient = mqtt.connect(broker);
-mqttClient.subscribe('GPSData');
-mqttClient.on('message', function(topic, dataFromSensor) {
+const gpsMqttClient = mqtt.connect(broker);
+const noGpsMqttClient = mqtt.connect(broker);
+
+gpsMqttClient.subscribe('GPSData');
+gpsMqttClient.on('message', function (topic, dataFromSensor) {
 
     var sensorData = JSON.parse(dataFromSensor);
     saveSensorDataToDb(sensorData);
 });
 
+noGpsMqttClient.subscribe('noGpsCoverageInfo');
+noGpsMqttClient.on('message', function (topic, dataFromSensor) {
+
+    var rfidLocationData = JSON.parse(dataFromSensor);
+    saveRfidDataToDb(rfidLocationData);
+});
+
 //Database operation starts here
-mongoose.connect(dbUrl, function(err, dataBase) {
+mongoose.connect(dbUrl, function (err, dataBase) {
 
     console.log("GPS Database Connected");
 });
 
-var dataBaseSchema = new mongoose.Schema({
+var gpsSchema = new mongoose.Schema({
 
     deviceID: String,
     deviceTime: String,
@@ -50,6 +60,7 @@ var dataBaseSchema = new mongoose.Schema({
 var deviceSchema = new mongoose.Schema({
 
     deviceID: String,
+    rfid: String,
     vehicleType: String,
     vehicleModel: String,
     vehicleRegNo: String,
@@ -57,8 +68,20 @@ var deviceSchema = new mongoose.Schema({
     vehiclePermission: String,
 });
 
-var GPSDataSchemaModel = mongoose.model(GPS_DATA, dataBaseSchema);
+var rfidSchema = new mongoose.Schema({
+
+    rfid: String,
+    stationID: String,
+    stationName: String,
+    stationLatitude: String,
+    stationLongitude: String,
+    stationTime: String,
+    stationDate: String,
+});
+
+var GPSDataSchemaModel = mongoose.model(GPS_DATA, gpsSchema);
 var vehicleSchemaModel = mongoose.model(VEHICLE_DATA, deviceSchema);
+var rfidSchemaModel = mongoose.model(RFID_DATA, rfidSchema);
 
 function saveSensorDataToDb(sensorData) {
 
@@ -79,7 +102,7 @@ function saveSensorDataToDb(sensorData) {
         deviceVariation: sensorData.GPRMC.variation
     });
 
-    saveToDb.save(function(err) {
+    saveToDb.save(function (err) {
         if (err) {
             console.log("Error in saving : " + err);
         } else {
@@ -93,6 +116,7 @@ function saveVehicleDataToDb(deviceData) {
     var saveToDb = new vehicleSchemaModel({
 
         deviceID: deviceData.deviceID,
+        rfid: deviceData.rfid,
         vehicleType: deviceData.vehicleType,
         vehicleModel: deviceData.vehicleModel,
         vehicleRegNo: deviceData.vehicleRegNo,
@@ -100,7 +124,7 @@ function saveVehicleDataToDb(deviceData) {
         vehiclePermission: deviceData.vehiclePermission,
     });
 
-    saveToDb.save(function(err) {
+    saveToDb.save(function (err) {
         if (err) {
             console.log("Error in saving : " + err);
         } else {
@@ -109,6 +133,27 @@ function saveVehicleDataToDb(deviceData) {
     })
 }
 
+function saveRfidDataToDb(rfidData) {
+
+    var saveToDb = new rfidSchemaModel({
+
+        rfid: rfidData.rfid,
+        stationID: rfidData.stationID,
+        stationName: rfidData.stationName,
+        stationLatitude: rfidData.stationLatitude,
+        stationLongitude: rfidData.stationLongitude,
+        stationTime: rfidData.stationTime,
+        stationDate: rfidData.stationDate,
+    });
+
+    saveToDb.save(function (err) {
+        if (err) {
+            console.log("Error in saving : " + err);
+        } else {
+            console.log("Saved Data :" + saveToDb)
+        }
+    })
+}
 
 // User operation
 
@@ -117,20 +162,20 @@ app.use(bodyParser.json());
 app.engine('html', cons.ejs);
 app.set('view engine', 'html');
 
-app.get("/addDevice", function(req, res) {
+app.get("/addDevice", function (req, res) {
 
     res.render("addvehicle.ejs", {
         title: "Add Device"
     });
 });
 
-app.post("/addDevice", function(req, res) {
+app.post("/addDevice", function (req, res) {
 
     saveVehicleDataToDb(req.body);
     res.redirect("/devices");
 });
 
-app.get("/deleteDevice/:query", function(req, res) {
+app.get("/deleteDevice/:query", function (req, res) {
 
     var query = req.params.query;
 
@@ -139,15 +184,15 @@ app.get("/deleteDevice/:query", function(req, res) {
     //     .then(returned => res.redirect("/devices"))
     //     .catch(err => { console.log(err) })
 
-    vehicleSchemaModel.remove({ deviceID: query }, function(err, doc) {
+    vehicleSchemaModel.remove({ deviceID: query }, function (err, doc) {
         if (err) console.log(err);
         res.redirect("/devices")
     })
 });
 
-app.get("/devices", function(req, res) {
+app.get("/devices", function (req, res) {
 
-    vehicleSchemaModel.find().distinct('deviceID', function(error, ids) {
+    vehicleSchemaModel.find().distinct('deviceID', function (error, ids) {
         res.render("devices.ejs", {
             devices: ids,
             title: "Device List"
@@ -155,13 +200,13 @@ app.get("/devices", function(req, res) {
     });
 });
 
-app.get("/getDataByDeviceId/:query", function(req, res) {
+app.get("/getDataByDeviceId/:query", function (req, res) {
 
     var query = req.params.query;
 
     GPSDataSchemaModel.find({
         'deviceID': query
-    }, function(err, result) {
+    }, function (err, result) {
         if (err) throw err;
         if (result) {
 
@@ -177,9 +222,9 @@ app.get("/getDataByDeviceId/:query", function(req, res) {
     });
 });
 
-app.get("/getAllData", function(req, res) {
+app.get("/getAllData", function (req, res) {
 
-    GPSDataSchemaModel.find({}, function(err, result) {
+    GPSDataSchemaModel.find({}, function (err, result) {
         if (err) throw err;
         if (result) {
             res.render("gpsdata.ejs", {
@@ -194,11 +239,11 @@ app.get("/getAllData", function(req, res) {
     });
 });
 
-app.get("/onmap", function(req, res) {
+app.get("/onmap", function (req, res) {
     res.render("singleplot.ejs", {
         lat: req.query.latitude,
         lng: req.query.longitude,
     });
 });
 
-var server = app.listen(3000, function() {});
+var server = app.listen(3000, function () { });
