@@ -1,10 +1,11 @@
+require('events').EventEmitter.prototype._maxListeners = 1000;
 var mraa = require('mraa'); //require mraa
 const mqtt = require('mqtt');
 var moment = require('moment');
 var momentTimezone = require('moment-timezone');
-var broker = 'mqtt://test.mosquitto.org';
-//var broker='mqtt://broker.hivemq.com';
-const client = mqtt.connect(broker);
+// var broker = 'mqtt://test.mosquitto.org';
+var broker = 'mqtt://broker.hivemq.com';
+// const client = mqtt.connect(broker);
 
 console.log('MRAA Version: ' + mraa.getVersion()); //print out the mraa version in IoT XDK console
 u = new mraa.Uart(0); //Default
@@ -23,6 +24,7 @@ var stationDate = moment().tz("Asia/Dhaka").format('YYYY/MM/DD');
 
 function connectRfidReceiver() {
     serialPort.on("open", function () {
+        console.log("Serial Port opened.");
         readData();
     });
 }
@@ -36,7 +38,7 @@ function readData() {
             console.log("Card No : " + rfid)
 
             var noGpsCoverageInfo = {
-                
+
                 "rfid": rfid,
                 "stationID": stationID,
                 "stationName": stationName,
@@ -45,8 +47,21 @@ function readData() {
                 "stationTime": stationTime,
                 "stationDate": stationDate,
             }
-            client.publish('noGpsCoverageInfo', JSON.stringify(noGpsCoverageInfo))
+
+            const client = mqtt.connect(broker);
+            client.on('connect', function () {
+
+                console.log("Station Connected to MQTT Server. Sending Data...");
+                client.publish('noGpsCoverageInfo', JSON.stringify(noGpsCoverageInfo))
+            })
         }
     });
 }
+
 connectRfidReceiver();
+
+serialPort.on("close", function () {
+
+    console.log("Serial Port Closed!!! Attempting to reopen...  ");
+    connectRfidReceiver();
+});
