@@ -1,6 +1,8 @@
 const mqtt = require('mqtt');
-const express = require("express");
-var app = express();
+const app = require("express")();
+// var app = express();
+var server = require('http').createServer(app);
+var io = require('socket.io')(server);
 var cons = require('consolidate');
 var dbUrl = 'mongodb://vtdata:vtdata@ds147069.mlab.com:47069/vt';
 const bodyParser = require('body-parser');
@@ -11,8 +13,8 @@ var VEHICLE_DATA = 'vehicleData';
 var RFID_DATA = 'rfidData';
 var moment = require('moment');
 var momentTimezone = require('moment-timezone');
-var broker = 'mqtt://test.mosquitto.org';
-//var broker='mqtt://broker.hivemq.com';
+// var broker = 'mqtt://test.mosquitto.org';
+var broker='mqtt://broker.hivemq.com';
 
 // MQTT Subscribe
 // Data updates autometically
@@ -26,12 +28,25 @@ gpsMqttClient.on('message', function (topic, dataFromSensor) {
     saveSensorDataToDb(sensorData);
 });
 
-noGpsMqttClient.subscribe('noGpsCoverageInfo');
-noGpsMqttClient.on('message', function (topic, dataFromSensor) {
+noGpsMqttClient.on('connect', function () {
+    console.log("Server Connected to MQTT broker");
+    noGpsMqttClient.subscribe('noGpsCoverageInfo');
+    noGpsMqttClient.on('message', function (topic, dataFromSensor) {
 
-    var rfidLocationData = JSON.parse(dataFromSensor);
-    saveRfidDataToDb(rfidLocationData);
-});
+        var rfidLocationData = JSON.parse(dataFromSensor);
+
+        console.log('Before WS : ' + rfidLocationData.rfid);
+
+        io.on('connection', function (socket) {
+            console.log('After WS : ' + rfidLocationData.rfid);
+            socket.emit('announcements', { message: rfidLocationData.rfid });
+        });
+
+        // saveRfidDataToDb(rfidLocationData);
+    });
+
+})
+
 
 //Database operation starts here
 mongoose.connect(dbUrl, function (err, dataBase) {
@@ -162,6 +177,18 @@ app.use(bodyParser.json());
 app.engine('html', cons.ejs);
 app.set('view engine', 'html');
 
+app.get("/vehicleDetail", function (req, res) {
+
+    res.sendFile(__dirname + "/views/vehicledetail.html", {
+        // title: "Vehicle Detail"
+    });
+});
+
+// io.on('connection', function (socket) {
+//     console.log('a user connected');
+//     socket.emit('announcements', { message: 'A new user has joined!' });
+// });
+
 app.get("/addDevice", function (req, res) {
 
     res.render("addvehicle.ejs", {
@@ -246,4 +273,6 @@ app.get("/onmap", function (req, res) {
     });
 });
 
-var server = app.listen(3000, function () { });
+// var server = app.listen(3000, function () { });
+
+server.listen(3000);

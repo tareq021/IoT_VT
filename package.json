@@ -17,5 +17,8 @@
     "mongodb"
   ],
   "author": "Tareq",
-  "license": "ISC"
+  "license": "ISC",
+  "dependencies": {
+    "socket.io": "^1.7.3"
+  }
 }

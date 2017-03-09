@@ -1,0 +1,38 @@
+<!DOCTYPE HTML>
+<html>
+
+<head>
+  <title>
+  </title>
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
+  <script src="http://code.jquery.com/jquery-1.12.0.min.js"></script>
+</head>
+<script src="/socket.io/socket.io.js"></script>
+<script>
+  var socket = io.connect();
+  var newValue;
+  var oldValue;
+  socket.on('announcements', function (data) {
+    
+    newValue = data.message
+    // if (newValue != oldValue) {
+    //   document.getElementById("msg").innerHTML = newValue;
+    //   // parent.document.location.reload();
+    //   oldValue = newValue;
+    // }
+    document.getElementById("msg").innerHTML = newValue;
+  });
+
+  console.log("In browser")
+
+</script>
+
+<body>
+  <div class="container">
+    <div class="row">
+      <p id="msg"></p>
+    </div>
+  </div>
+</body>
+
+</html>
