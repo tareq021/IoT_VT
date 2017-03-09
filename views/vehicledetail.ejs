@@ -1,23 +1,71 @@
 <!DOCTYPE HTML>
 <html>
+
 <head>
-    <title><%=title%></title>
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
-    <script src="http://code.jquery.com/jquery-1.12.0.min.js"></script>
+  <title>
+  </title>
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
+  <script src="http://code.jquery.com/jquery-1.12.0.min.js"></script>
 </head>
-   <script src="/socket.io/socket.io.js"></script>
+<script src="/socket.io/socket.io.js"></script>
+
+<body>
+  <div class="container">
+    <div class="row">
+      <h4><%=title%></h4>
+      <label>RFID</label>
+      <p id="rfid"></p>
+      <label>GPS</label>
+      <p id="gps"></p>
+      <label>Type</label>
+      <p id="vtype"></p>
+      <label>Model</label>
+      <p id="vmodel"></p>
+      <label>Reg No.</label>
+      <p id="vreg"></p>
+      <label>Chesis</label>
+      <p id="vchesis"></p>
+      <label>Permission</label>
+      <p id="vpermission"></p>
+    </div>
+  </div>
+</body>
 <script>
-  var socket = io("/vehicleDetail");
+  $(document).ready(function () {
+    var socket = io.connect();
+    socket.on('announcements', function (value) {
+      // $("#msg").val(value.message);
+console.log("value :"+JSON.stringify(value));
+      $.ajax({
+                type: 'GET',
+                url: "/getVehicleDetail/"+value.message,
+                dataType: 'json',
+                contentType: 'application/json; charset=utf-8',
+                success: function (data) {
+                  if(data!="null"){
+                  $("#rfid").text(data[0].rfid);
+                  $("#gps").text(data[0].deviceID);
+                  $("#vtype").text(data[0].vehicleType);
+                  $("#vmodel").text(data[0].vehicleModel);
+                  $("#vreg").text(data[0].vehicleRegNo);
+                  $("#vchesis").text(data[0].vehicleChesisNo);
+                  $("#vpermission").text(data[0].vehiclePermission);                                      
+                  }else{
+                    $("#rfid").empty();
+                    $("#rfid").text("Not Available");
+                  $("#gps").text("Not Available");
+                  $("#vtype").text("Not Available");
+                  $("#vmodel").text("Not Available");
+                  $("#vreg").text("Not Available");
+                  $("#vchesis").text("Not Available");
+                  $("#vpermission").text("Not Available");
+                  }
+                  },
+                error: function (xhr, ajaxOptions, thrownError) { }
+            })
+    });
+  });
 
 </script>
-   <body>
-   <div class="container">
-            <div class="row">
-            <h4><%=title%></h4>
-      <p><%=test%></p>      
-      
-      </div>
-        </div>
-</body>
-   
+
 </html>

@@ -8,31 +8,23 @@
   <script src="http://code.jquery.com/jquery-1.12.0.min.js"></script>
 </head>
 <script src="/socket.io/socket.io.js"></script>
-<script>
-  var socket = io.connect();
-  var newValue;
-  var oldValue;
-  socket.on('announcements', function (data) {
-    
-    newValue = data.message
-    // if (newValue != oldValue) {
-    //   document.getElementById("msg").innerHTML = newValue;
-    //   // parent.document.location.reload();
-    //   oldValue = newValue;
-    // }
-    document.getElementById("msg").innerHTML = newValue;
-  });
-
-  console.log("In browser")
-
-</script>
 
 <body>
   <div class="container">
     <div class="row">
-      <p id="msg"></p>
+      <h4>Vehicle Details</h4>
+      <input id="msg"></input>
     </div>
   </div>
 </body>
+<script>
+  $(document).ready(function () {
+    var socket = io.connect();
+    socket.on('announcements', function (data) {
+      $("#msg").val(data.message);
+    });
+  });
+
+</script>
 
 </html>

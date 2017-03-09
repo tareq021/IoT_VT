@@ -1,6 +1,5 @@
 const mqtt = require('mqtt');
 const app = require("express")();
-// var app = express();
 var server = require('http').createServer(app);
 var io = require('socket.io')(server);
 var cons = require('consolidate');
@@ -13,13 +12,13 @@ var VEHICLE_DATA = 'vehicleData';
 var RFID_DATA = 'rfidData';
 var moment = require('moment');
 var momentTimezone = require('moment-timezone');
-// var broker = 'mqtt://test.mosquitto.org';
-var broker='mqtt://broker.hivemq.com';
+var broker = 'mqtt://test.mosquitto.org';
+// var broker='mqtt://broker.hivemq.com';
 
 // MQTT Subscribe
 // Data updates autometically
 const gpsMqttClient = mqtt.connect(broker);
-const noGpsMqttClient = mqtt.connect(broker);
+const noGpsMqttClient = mqtt.connect(broker,);
 
 gpsMqttClient.subscribe('GPSData');
 gpsMqttClient.on('message', function (topic, dataFromSensor) {
@@ -44,9 +43,7 @@ noGpsMqttClient.on('connect', function () {
 
         // saveRfidDataToDb(rfidLocationData);
     });
-
 })
-
 
 //Database operation starts here
 mongoose.connect(dbUrl, function (err, dataBase) {
@@ -72,7 +69,7 @@ var gpsSchema = new mongoose.Schema({
 
 });
 
-var deviceSchema = new mongoose.Schema({
+var vehicleSchema = new mongoose.Schema({
 
     deviceID: String,
     rfid: String,
@@ -95,7 +92,7 @@ var rfidSchema = new mongoose.Schema({
 });
 
 var GPSDataSchemaModel = mongoose.model(GPS_DATA, gpsSchema);
-var vehicleSchemaModel = mongoose.model(VEHICLE_DATA, deviceSchema);
+var vehicleSchemaModel = mongoose.model(VEHICLE_DATA, vehicleSchema);
 var rfidSchemaModel = mongoose.model(RFID_DATA, rfidSchema);
 
 function saveSensorDataToDb(sensorData) {
@@ -179,15 +176,33 @@ app.set('view engine', 'html');
 
 app.get("/vehicleDetail", function (req, res) {
 
-    res.sendFile(__dirname + "/views/vehicledetail.html", {
-        // title: "Vehicle Detail"
+    res.render("vehicledetail.ejs", {
+        title: "Vehicle Details"
     });
 });
 
-// io.on('connection', function (socket) {
-//     console.log('a user connected');
-//     socket.emit('announcements', { message: 'A new user has joined!' });
-// });
+app.get("/getVehicleDetail/:query", function (req, res) {
+
+    var query = req.params.query;
+    console.log("Data incoming : " + query)
+
+    vehicleSchemaModel.find({
+        'rfid': query
+    }, function (err, result) {
+        if (err) throw err;
+        if (result) {
+            if (result != null) {
+                res.send(JSON.stringify(result));
+            }else{
+                res.send("null");
+            }
+        } else {
+            res.send(JSON.stringify({
+                error: 'Error'
+            }));
+        }
+    });
+});
 
 app.get("/addDevice", function (req, res) {
 
