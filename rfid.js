@@ -3,9 +3,8 @@ var mraa = require('mraa'); //require mraa
 const mqtt = require('mqtt');
 var moment = require('moment');
 var momentTimezone = require('moment-timezone');
-// var broker = 'mqtt://test.mosquitto.org';
-var broker = 'mqtt://broker.hivemq.com';
-// const client = mqtt.connect(broker);
+var broker = 'mqtt://test.mosquitto.org';
+// var broker = 'mqtt://broker.hivemq.com';
 
 console.log('MRAA Version: ' + mraa.getVersion()); //print out the mraa version in IoT XDK console
 u = new mraa.Uart(0); //Default
